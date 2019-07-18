@@ -24,7 +24,7 @@ const handleBlogRouter = (req, res) => {
   }
   // 获取博客详情
   if(method == 'GET' && req.path == '/api/blog/detail') {
-    // const data = getDetial(id);
+    // const data = x(id);
     // return new SuccessModel(data);
     const result = getDetial(id)
     return result.then(data => {
@@ -44,15 +44,14 @@ const handleBlogRouter = (req, res) => {
   }
   // 更新一篇博客
   if(method == 'POST' && req.path == '/api/blog/update') {
-   const result = updateBlog(id, req.body);
-   return result.then(val => {
-    if(val) {
-      return new SuccessModel()
-    } else {
-      return new ErrorModel('更新博客失败')
-    }
-   })
-    
+    const result = updateBlog(id, req.body);
+    return result.then(val => {
+      if(val) {
+        return new SuccessModel()
+      } else {
+        return new ErrorModel('更新博客失败')
+      }
+    })
   }
   // 删除一篇博客
   if(method == 'POST' && req.path == '/api/blog/del') {
