@@ -1,8 +1,9 @@
 const queryString = require('querystring');
 const handleBlogRouter = require('./src/router/blog');
 const handleUserRouter = require('./src/router/user');
+const { get, set } = require('./src/db/redis');
 
-const SESSION_DATA = {}
+// const SESSION_DATA = {}
 
 // 获取cookie的过期时间
 const getCookieExpires = () => {
@@ -58,21 +59,44 @@ const serverHandle = (req, res) => {
   });
 
   // 解析session
+  // let needSetCookie = false;
+  // let userId = req.cookie.userid;
+  // if(userId) {
+  //   if(!SESSION_DATA[userId]) {
+  //     SESSION_DATA[userId] = {};
+  //   }
+  // } else {
+  //   needSetCookie = true
+  //   userId = `${Date.now()}_${Math.random()}`
+  //   SESSION_DATA[userId] = {};
+  // }
+  // req.session = SESSION_DATA[userId]
+
+  // 解析session 使用redis
   let needSetCookie = false;
   let userId = req.cookie.userid;
-  if(userId) {
-    if(!SESSION_DATA[userId]) {
-      SESSION_DATA[userId] = {};
-    }
-  } else {
-    needSetCookie = true
-    userId = `${Date.now()}_${Math.random()}`
-    SESSION_DATA[userId] = {};
+  if(!userId) {
+    needSetCookie = true;
+    userId = `${Date.now()}_${Math.random()}`;
+    // 初始化redis中的session值
+    set(userId, {});
   }
-  req.session = SESSION_DATA[userId]
-  
-  // 处理 post data
-  getPostData(req).then(postData => {
+  // 获取session
+  req.sessionId = userId
+  get(req.sessionId).then(sessionData => {
+    if(sessionData == null) {
+      // 初始化session
+      set(req.sessionId, {})
+      // 设置session
+      req.session = {};
+    } else {
+      req.session = sessionData;
+    }
+    console.log('req.session', req.session);
+    
+    // 处理postdata
+    return getPostData(req)
+  }).then(postData => {
     req.body = postData;
 
     // 处理blog路由
